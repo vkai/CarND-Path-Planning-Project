@@ -19,9 +19,9 @@ A trajectory is created for a two second horizon ahead. The `generateNewPoints()
 
 The planner uses the `FSM` class to make action decisions based on the current cycle's `Road` conditions. The FSM first calls `getValidNextStates()` to determine the valid states from the self vehicle's current lane. This simply entails whether the vehicle can change lanes left and/or right, or keep its current lane. With each valid next state, the FSM calculates an associated cost based the vehicle's distance to the closest other vehicles forward and behind. Vehicles within a certain proximity prevent the self vehicle from moving into that lane. The minimum cost state is returned to the planner in order to calculate the appropriate `end_s` and `end_d` vectors. If the FSM determines no lane change is safe, the planner will slow the vehicle down. 
 
-This planner was able to complete a lap from stationary in a little under six minutes, with a longest incident free run for 78.15 miles. Click the image below for a sped of video of the vehicle's run.
+This planner was able to complete a lap from stationary in a little under six minutes, with a longest incident free run for 78.15 miles. Click the image below to view a sped up version of the run. The video condenses an hour-long run into about seven minutes. [Video](https://youtu.be/B0qrGkCeXx8)
 
-![Video][best_run]()
+[![Video](./best_run.png)](https://youtu.be/B0qrGkCeXx8)
 
 
 ## Basic Build Instructions
