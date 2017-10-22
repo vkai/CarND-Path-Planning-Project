@@ -1,16 +1,28 @@
 # CarND-Path-Planning-Project
 Self-Driving Car Engineer Nanodegree Program
-   
-### Simulator.
-You can download the Term3 Simulator which contains the Path Planning Project from the [releases tab (https://github.com/udacity/self-driving-car-sim/releases).
 
-### Goals
-In this project your goal is to safely navigate around a virtual highway with other traffic that is driving +-10 MPH of the 50 MPH speed limit. You will be provided the car's localization and sensor fusion data, there is also a sparse map list of waypoints around the highway. The car should try to go as close as possible to the 50 MPH speed limit, which means passing slower traffic when possible, note that other cars will try to change lanes too. The car should avoid hitting other cars at all cost as well as driving inside of the marked road lanes at all times, unless going from one lane to another. The car should be able to make one complete loop around the 6946m highway. Since the car is trying to go 50 MPH, it should take a little over 5 minutes to complete 1 loop. Also the car should not experience total acceleration over 10 m/s^2 and jerk that is greater than 50 m/s^3.
+[//]: # (Image References)
+[best_run]: ./best_run.png "Best Run"
 
-#### The map of the highway is in data/highway_map.txt
-Each waypoint in the list contains  [x,y,s,dx,dy] values. x and y are the waypoint's map coordinate position, the s value is the distance along the road to get to that waypoint in meters, the dx and dy values define the unit normal vector pointing outward of the highway loop.
 
-The highway's waypoints loop around so the frenet s value, distance along the road, goes from 0 to 6945.554.
+## Path Planner Documentation
+
+The path planner starts by creating a `Map` object from the `highway_map.csv` file. This map object creates and stores splines for `x`, `y`, `dx`, and `dy` based on the waypoint `s` values. The splines are used to implement a smoother `Map::getXY()` function that converts Frenet coordinates to the map's Cartesian coordinates. 
+
+On each cycle, the planner starts out by building a representation of the road using the sensor fusion data for surrounding vehicles, stored in the `Road` class. A `Vehicle` object is created for the self vehicle and each of the other detected vehicles. The surrounding vehicles are organized into lanes `Left`, `Center` and `Right` based on their detected `d` coordinates. This makes it convenient for the path planner to make decisions based on other vehicles in the self vehicle's own lane, or vehicles in a prospective target lane when attempting to change lanes.
+
+The planner uses the Jerk Minimizing Trajectory technique of generating smooth path points. The `JMT()` function generates a polynomial between a start state and target state, with each state consisting of `{x, x_dot, and x_dot_dot}`. This state represents a coordinate and its rates of change. The polynomial provides a smooth transition function between the two states over a certain time `T`.
+
+Thus, in order to use the JMT function, the planner creates two vectors, start and end, for both the `s` coordinate and `d` coordinate, for a total of four vectors. `start_s` is initialized to the `end_s` of the previous cycle to ensure a continuous smooth trajectory for the vehicle. `end_s` is determined based on the `target_speed` of the vehicle, which accounts for the proximity to vehicles in the current lane. Similarly, the `end_d` is determined based on lane keep or lane change decisions, which will often simply equal `start_d`. 
+
+A trajectory is created for a two second horizon ahead. The `generateNewPoints()` function calculates points based on the JMT polynomials for `s` and `d`, and finally converts the coordinates to `(x, y)` coordinates to feed into the simulator.
+
+The planner uses the `FSM` class to make action decisions based on the current cycle's `Road` conditions. The FSM first calls `getValidNextStates()` to determine the valid states from the self vehicle's current lane. This simply entails whether the vehicle can change lanes left and/or right, or keep its current lane. With each valid next state, the FSM calculates an associated cost based the vehicle's distance to the closest other vehicles forward and behind. Vehicles within a certain proximity prevent the self vehicle from moving into that lane. The minimum cost state is returned to the planner in order to calculate the appropriate `end_s` and `end_d` vectors. If the FSM determines no lane change is safe, the planner will slow the vehicle down. 
+
+This planner was able to complete a lap from stationary in a little under six minutes, with a longest incident free run for 78.15 miles. Click the image below for a sped of video of the vehicle's run.
+
+![Video][best_run]()
+
 
 ## Basic Build Instructions
 
@@ -20,6 +32,11 @@ The highway's waypoints loop around so the frenet s value, distance along the ro
 4. Run it: `./path_planning`.
 
 Here is the data provided from the Simulator to the C++ Program
+
+#### The map of the highway is in data/highway_map.csv
+Each waypoint in the list contains  [x,y,s,dx,dy] values. x and y are the waypoint's map coordinate position, the s value is the distance along the road to get to that waypoint in meters, the dx and dy values define the unit normal vector pointing outward of the highway loop.
+
+The highway's waypoints loop around so the frenet s value, distance along the road, goes from 0 to 6945.554.
 
 #### Main car's localization Data (No Noise)
 
